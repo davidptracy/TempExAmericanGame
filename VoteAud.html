@@ -1,0 +1,142 @@
+<html>
+	<head>
+		<title> American Game Changers </title>
+
+		<style>
+
+			body {
+				width: 100%;
+				font-family: Arial, Verdana, sans-serif;
+				font-size: 80px;
+				padding-top: 10px;
+			}
+
+			.description {
+				width: 100%;
+				font-family: Arial, Verdana, sans-serif;
+				font-size: 40px;
+				padding-top: 5px;
+				background-color: hsl(0, 100%, 100%);
+			}
+
+			.voting {
+				float: left;
+				font-size: 15px;
+				width: 22%;
+				margin: 5px;
+				padding: 5px;
+			}
+
+		</style>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+
+			// ============================================================
+			// =================== GLOBAL VARIABLES =======================
+			// ============================================================
+
+			var socket;
+
+			// ============================================================
+			// ===================== LOAD + EVENTS ========================
+			// ============================================================
+
+			window.addEventListener('load', function(){
+
+				//connect to remote server
+				socket = io.connect('/');
+
+				//on connect, log a message
+				socket.on('connect', function(){
+					console.log("Connected to Socket Server");
+				});	
+
+			});
+
+			var submit = function(){
+				var ansArray = [];
+				var ans1 = document.getElementById("value1").value;
+				var ans2 = document.getElementById("value2").value;
+				var ans3 = document.getElementById("value3").value;
+				var ans4 = document.getElementById("value4").value;
+				console.log(ans4);
+				ansArray.push(parseInt(ans1, 10));
+				ansArray.push(parseInt(ans2, 10));
+				ansArray.push(parseInt(ans3, 10));
+				ansArray.push(parseInt(ans4, 10));
+				console.log(ansArray);
+				socket.emit('audAnswers', ansArray);
+			}		
+
+		</script>
+
+	</head>
+
+	<body>
+
+		<div id="sensorValues" align='center'>
+			American Game Changers
+		</div>
+		<br>
+		<div class="description" align='center'>
+			From the menus below, select how <strong>DESIREABLE</strong> each contestants product idea is. 
+		</div>
+		<br>
+
+		
+			<div class="voting" align='center'>
+				Contestant 1
+				<select id="value1" name="Contestant1">
+					<option value="1">No Thanks ...</option>
+					<option value="2">That's kind of cool.</option>
+					<option value="3">I wouldn't mind one ...</option>
+					<option value="4">I want one of those!</option>
+					<option value="5">I need it now!</option>
+				</select>
+			</div>
+
+			<div class="voting" align='center'>
+				Contestant 2
+				<select id="value2" name="Contestant2">
+					<option value="1">No Thanks ...</option>
+					<option value="2">That's kind of cool.</option>
+					<option value="3">I wouldn't mind one ...</option>
+					<option value="4">I want one of those!</option>
+					<option value="5">I need it now!</option>
+				</select>
+			</div>
+
+			<div class="voting" align='center'>
+				Contestant 3
+				<select id="value3" name="Contestant3">
+					<option value="1">No Thanks ...</option>
+					<option value="2">That's kind of cool.</option>
+					<option value="3">I wouldn't mind one ...</option>
+					<option value="4">I want one of those!</option>
+					<option value="5">I need it now!</option>
+				</select>
+			</div>
+
+			<div class="voting" align='center'>
+				Contestant 4
+				<select id="value4" name="Contestant4">
+					<option value="1">No Thanks ...</option>
+					<option value="2">That's kind of cool.</option>
+					<option value="3">I wouldn't mind one ...</option>
+					<option value="4">I want one of those!</option>
+					<option value="5">I need it now!</option>
+				</select>
+			</div>
+		</div>
+		<br>
+
+		<div id="submit" align='center'>
+			<button type="button" onclick="submit()">Submit!</button>
+		</div>
+
+
+
+	</body>
+
+</html>

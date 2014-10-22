@@ -1,0 +1,476 @@
+<html>
+	<head>
+		<title> Working Title </title>
+
+		<style>
+
+			body {
+				width: 1024px;
+				font-family: Arial, Verdana, sans-serif;
+			}
+		
+			.heading01 {
+				margin: 5px;
+				padding: 5px;
+			}
+
+			.gameColumn {
+				float: left;
+				width: 22%;
+				margin: 5px;
+				padding: 5px;
+			}
+
+			.infoColumn {
+				float: left;
+				width: 30%;
+				margin: 5px;
+				padding: 5px;
+			}
+
+		</style>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+
+			// ============================================================
+			// =================== GLOBAL VARIABLES =======================
+			// ============================================================
+
+			var toolArray = ['Microscope','Oculus Rift','Pill Camera'];
+			var methodArray = ['Observation', 'Interrogation', 'Destruction', 'Intimidation'];
+			var futureArray = ['Dream Linking','Video tattoo','Immortality'];
+			var purposeArray = ['Adversting Campaign','Entertainment Service','Survival Kit'];
+			var timeArray = ['10 years', '20 years', '50 years'];
+			var settingArray = ['Forest','Desert','City','Farm', 'Metropolis', 'Mars'];
+			
+			var fontFamily = "20px Arial";
+			var fontFamilyLarge = "40px Arial";
+			var timeRemaining;
+
+			var eToolClicked = false;
+			var methodClicked = false;
+			var purposeClicked = false;
+			var futureClicked = false;
+
+			var timerActive = false;
+			var eToolFromServer = false;
+			var methodFromServer = false;
+			var futureFromServer = false;
+			var purposeFromServer = false;
+
+			var eToolCanvas, methodCanvas, futureCanvas, purposeCanvas, timeCanvas, settingCanvas, clockCanvas;
+
+			var eToolCtx, methodCtx, futureCtx, purposeCtx, timeCtx, settingCtx, clockCtx;
+
+			var socket;
+
+			// ============================================================
+			// ===================== LOAD + EVENTS ========================
+			// ============================================================
+
+			window.addEventListener('load', function(){
+
+				//connect to remote server
+				socket = io.connect('/');
+
+				//on connect, log a message
+				socket.on('connect', function(){
+					console.log("Connected to Socket Server");
+				});
+
+				socket.on('timer', function(data){	
+
+					timerActive = true;				
+					console.log("Got Timer from server!");
+
+					if (data == "Time's Up!"){
+						timerActive = false;
+					}
+					
+					countDown(data);
+
+				});
+
+				socket.on('eToolFromServer', function(data){
+					eToolFromServer = true;
+					eToolClicked = true;
+
+					h=parseInt(document.getElementById("eToolCanvas").getAttribute("height"));
+					w=parseInt(document.getElementById("eToolCanvas").getAttribute("width"));
+
+					console.log("Existing Tool from server received!");
+						
+					eToolCtx.fillStyle = "#9ea7b8";
+		            eToolCtx.fillRect(0,0,w,h);
+
+		            eToolCtx.font= fontFamily;
+		            eToolCtx.textAlign = 'center';
+		            eToolCtx.fillStyle = "black";
+		            eToolCtx.fillText(data,w/2,h/2);
+
+		            checkStatus();
+				});
+
+				socket.on('methodFromServer', function(data){
+
+					h=parseInt(document.getElementById("methodCanvas").getAttribute("height"));
+					w=parseInt(document.getElementById("methodCanvas").getAttribute("width"));
+
+					methodFromServer = true;
+					methodClicked = true;
+
+					console.log("Method from server received!");
+
+					methodCtx.fillStyle = "#9ea7b8";
+		            methodCtx.fillRect(0,0,w,h);
+
+		            methodCtx.font= fontFamily;
+		            methodCtx.textAlign = 'center';
+		            methodCtx.fillStyle = "black";
+		            methodCtx.fillText(data,w/2, h/2);
+
+		            checkStatus();
+				});
+
+				// socket.on('futureFromServer', function(data){
+
+				// 	h=parseInt(document.getElementById("futureCanvas").getAttribute("height"));
+				// 	w=parseInt(document.getElementById("futureCanvas").getAttribute("width"));
+
+				// 	futureFromServer = true;
+				// 	futureClicked = true;
+
+				// 	console.log("Future from server received!");
+
+				// 	futureCtx.fillStyle = "#9ea7b8";
+		  //           futureCtx.fillRect(0,0,w,h);
+
+		  //           futureCtx.font= fontFamily;
+		  //           futureCtx.textAlign = 'center';
+		  //           futureCtx.fillStyle = "black";
+		  //           futureCtx.fillText(data,w/2, h/2);
+
+		  //           checkStatus();
+
+				// });
+
+				socket.on('purposeFromServer', function(data){
+
+					h=parseInt(document.getElementById("purposeCanvas").getAttribute("height"));
+					w=parseInt(document.getElementById("purposeCanvas").getAttribute("width"));
+
+					purposeFromServer = true;
+					purposeClicked = true;
+
+					console.log("Purpose from server received!");
+
+					purposeCtx.fillStyle = "#9ea7b8";
+		            purposeCtx.fillRect(0,0,w,h);
+
+		            purposeCtx.font= fontFamily;
+		            purposeCtx.textAlign = 'center';
+		            purposeCtx.fillStyle = "black";
+		            purposeCtx.fillText(data,w/2, h/2);
+
+		            checkStatus();		
+				})
+
+				setup();
+
+				// Canvas event listeners
+				eToolCanvas.addEventListener('click', function(){
+
+					h=parseInt(document.getElementById("eToolCanvas").getAttribute("height"));
+					w=parseInt(document.getElementById("eToolCanvas").getAttribute("width"));
+
+					if (!timerActive && !eToolFromServer){
+
+						var selected = getTool(Math.random());
+
+						eToolClicked = true;
+						console.log("Existing Tool Canvas has been Clicked!");
+						
+						eToolCtx.fillStyle = "#9ea7b8";
+			            eToolCtx.fillRect(0,0,w,h);
+
+			            eToolCtx.font= fontFamily;
+			            eToolCtx.textAlign = 'center';
+			            eToolCtx.fillStyle = "black";
+			            eToolCtx.fillText(selected,w/2,h/2);
+
+			            socket.emit('eToolSelected', selected)			            
+					}
+
+					checkStatus();
+
+				});
+
+				methodCanvas.addEventListener('click', function(){
+					h=parseInt(document.getElementById("methodCanvas").getAttribute("height"));
+					w=parseInt(document.getElementById("methodCanvas").getAttribute("width"));
+
+					if (!timerActive && !methodFromServer){
+
+						var selected = getMethod(Math.random());
+
+						methodClicked = true;
+						console.log("Method Canvas has been Clicked!");
+
+						methodCtx.fillStyle = "#9ea7b8";
+			            methodCtx.fillRect(0,0,w,h);
+
+			            methodCtx.font= fontFamily;
+			            methodCtx.textAlign = 'center';
+			            methodCtx.fillStyle = "black";
+			            methodCtx.fillText(selected,w/2, h/2);
+
+			            socket.emit('methodSelected', selected)
+					}
+
+					checkStatus();
+
+				});
+
+				// futureCanvas.addEventListener('click', function(){
+				// 	h=parseInt(document.getElementById("futureCanvas").getAttribute("height"));
+				// 	w=parseInt(document.getElementById("futureCanvas").getAttribute("width"));
+
+
+				// 	if (!timerActive && !futureFromServer){
+
+				// 		var selected = getFuture(Math.random());
+
+				// 		futureClicked = true;
+				// 		console.log("Future Canvas has been Clicked!");
+
+				// 		futureCtx.fillStyle = "#9ea7b8";
+			 //            futureCtx.fillRect(0,0,w,h);
+
+			 //            futureCtx.font= fontFamily;
+			 //            futureCtx.textAlign = 'center';
+			 //            futureCtx.fillStyle = "black";
+			 //            futureCtx.fillText(selected,w/2, h/2);
+
+			 //            socket.emit('futureSelected', selected)
+				// 	}	
+
+				// 	checkStatus();
+
+				// });
+
+				purposeCanvas.addEventListener('click', function(){
+					h=parseInt(document.getElementById("purposeCanvas").getAttribute("height"));
+					w=parseInt(document.getElementById("purposeCanvas").getAttribute("width"));
+
+					if (!timerActive && !purposeFromServer){
+
+						var selected = getPurpose(Math.random());
+
+						purposeClicked = true;
+						console.log("Context Canvas has been Clicked!");
+
+						purposeCtx.fillStyle = "#9ea7b8";
+			            purposeCtx.fillRect(0,0,w,h);
+
+			            purposeCtx.font= fontFamily;
+			            purposeCtx.textAlign = 'center';
+			            purposeCtx.fillStyle = "black";
+			            purposeCtx.fillText(selected,w/2, h/2);
+
+			            socket.emit('purposeSelected', selected)
+					}
+
+					checkStatus();
+
+				});
+
+			});
+
+			var setup = function(){
+
+				// =============================================
+				//   SETUP INITIAL PROPERTIES OF THE CANVASES
+				// =============================================
+
+				eToolCanvas = document.getElementById('eToolCanvas');
+				eToolCtx = eToolCanvas.getContext('2d');
+				eToolCtx.fillStyle = "red";
+	            eToolCtx.fillRect(0,0,document.getElementById("eToolCanvas").getAttribute("width"),document.getElementById("eToolCanvas").getAttribute("height"));
+
+				methodCanvas = document.getElementById('methodCanvas');
+				methodCtx = methodCanvas.getContext('2d');
+				methodCtx.fillStyle = "red";
+	            methodCtx.fillRect(0,0,document.getElementById("methodCanvas").getAttribute("width"),document.getElementById("methodCanvas").getAttribute("height"));
+
+				// futureCanvas = document.getElementById('futureCanvas');
+				// futureCtx = futureCanvas.getContext('2d');
+				// futureCtx.fillStyle = "red";
+	   //          futureCtx.fillRect(0,0,document.getElementById("futureCanvas").getAttribute("width"),document.getElementById("futureCanvas").getAttribute("height"));
+
+				purposeCanvas = document.getElementById('purposeCanvas');
+				purposeCtx = purposeCanvas.getContext('2d');
+				purposeCtx.fillStyle = "red";
+	            purposeCtx.fillRect(0,0,document.getElementById("purposeCanvas").getAttribute("width"),document.getElementById("purposeCanvas").getAttribute("height"));
+
+	            timeCanvas = document.getElementById('timeCanvas');
+				timeCtx = timeCanvas.getContext('2d');
+				timeCtx.fillStyle = "red";
+	            timeCtx.fillRect(0,0,document.getElementById("timeCanvas").getAttribute("width"),document.getElementById("timeCanvas").getAttribute("height"));
+
+	            settingCanvas = document.getElementById('settingCanvas');
+				settingCtx = settingCanvas.getContext('2d');
+				settingCtx.fillStyle = "red";
+	            settingCtx.fillRect(0,0,document.getElementById("settingCanvas").getAttribute("width"),document.getElementById("settingCanvas").getAttribute("height"));
+
+	            clockCanvas = document.getElementById('clockCanvas');
+				clockCtx = clockCanvas.getContext('2d');
+				clockCtx.fillStyle = "red";
+	            clockCtx.fillRect(0,0,document.getElementById("clockCanvas").getAttribute("width"),document.getElementById("clockCanvas").getAttribute("height"));
+			}
+
+			var getTool = function(value){
+				var multiplier = value * toolArray.length;
+				return toolArray[Math.floor(multiplier)]
+			}
+
+			var getMethod = function(value){
+				var multiplier = value * methodArray.length;
+				return methodArray[Math.floor(multiplier)];
+			}
+
+			var getFuture = function(value){
+				var multiplier = value * futureArray.length;
+				return futureArray[Math.floor(multiplier)];
+			}
+
+			var getPurpose = function(value){
+				var multiplier = value * purposeArray.length;
+				return purposeArray[Math.floor(multiplier)];
+			}
+
+			var getTime = function(value){
+				var multiplier = value * purposeArray.length;
+				return timeArray[Math.floor(multiplier)];
+			}
+
+			var getSetting = function(value){
+				var multiplier = value * purposeArray.length;
+				return settingArray[Math.floor(multiplier)];
+			}
+
+			var checkStatus = function(){
+				if (eToolClicked && methodClicked && purposeClicked && !timerActive){
+
+					if (!timerActive){
+						socket.emit('gameTime');
+						initGameTime();
+					}
+
+				}
+			}
+
+			var initGameTime = function(){
+
+				//timeCtx = timeCanvas
+
+				var w = 300;
+				var h = 200;
+
+				timeCtx.fillStyle = "#9ea7b8";
+	            timeCtx.fillRect(0,0,w,h);
+
+	            timeCtx.font= fontFamilyLarge;
+	            timeCtx.textAlign = 'center';
+	            timeCtx.fillStyle = "black";
+	            timeCtx.fillText(getTime(Math.random()),w/2, h/2);
+
+				settingCtx.fillStyle = "#9ea7b8";
+	            settingCtx.fillRect(0,0,w,h);
+
+	            settingCtx.font= fontFamilyLarge;
+	            settingCtx.textAlign = 'center';
+	            settingCtx.fillStyle = "black";
+	            settingCtx.fillText(getSetting(Math.random()),w/2, h/2);
+
+	            countDown();            
+
+			}
+
+			var countDown = function(timer){
+
+				var w = 300;
+				var h = 200;
+
+				console.log("countdown called");
+
+				clockCtx.fillStyle = "#9ea7b8";
+	            clockCtx.fillRect(0,0,w,h);
+
+	            clockCtx.font = fontFamilyLarge;
+	            clockCtx.textAlign = 'center';
+	            clockCtx.fillStyle = "black";
+	            clockCtx.fillText(String("0:" + timer + "\""), w/2, h/2);
+
+			}
+
+		</script>
+
+
+	</head>
+
+	<body>
+
+<!-- 
+		<div class="heading01">
+		<h1>Scenario Game</h1>
+		<p>
+		Flip the cards. Create a drawing from the words you see. When the time is up, share your creation with your friends.
+		</p>
+		</div> -->
+
+		<div class="gameColumn" align='center'>
+			<h2>METHOD</h2>
+			<canvas id="methodCanvas" width="200" height="300">
+			</canvas>
+		</div>
+
+<!-- 		<div class="gameColumn" align='center'>
+			<h2>FUTURE TOOL</h2>
+			<canvas id="futureCanvas" width="200" height="300">
+			</canvas>
+		</div> -->
+
+		<div class="gameColumn" align='center'>
+			<h2>EXISTING TOOL</h2>	
+			<canvas id="eToolCanvas" width="200" height="300">
+			</canvas>		
+		</div>
+
+		<div class="gameColumn" align='center'>
+			<h2>PURPOSE</h2>
+			<canvas id="purposeCanvas" width="200" height="300">
+			</canvas>
+		</div>
+
+		<div class="infoColumn" align='center'>
+			<h2> TIME PERIOD </h2>
+			<canvas id="timeCanvas" width="300" height="200">
+			</canvas>
+		</div>
+
+		<div class="infoColumn" align='center'>
+			<h2> SETTING </h2>
+			<canvas id="settingCanvas" width="300" height="200">
+			</canvas>
+		</div>
+
+		<div class="infoColumn" align='center'>
+			<h2> COUNTDOWN </h2>
+			<canvas id="clockCanvas" width="300" height="200">
+			</canvas>
+		</div>
+
+	</body>
+
+</html>

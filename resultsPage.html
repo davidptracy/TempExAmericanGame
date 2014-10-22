@@ -1,0 +1,160 @@
+<html>
+	<head>
+		<title> American Game Changers </title>
+
+		<style>
+
+			body {
+				width: 100%;
+				font-family: Arial, Verdana, sans-serif;
+				font-size: 80px;
+				padding-top: 0px;
+			}
+
+			.description {
+				width: 100%;
+				font-family: Arial, Verdana, sans-serif;
+				font-size: 40px;
+				padding-top: 5px;
+				background-color: hsl(0, 100%, 100%);
+			}
+
+			.voting {
+				float: left;
+				font-size: 15px;
+				width: 22%;
+				margin: 5px;
+				padding: 5px;
+			}
+
+			canvas, img { display:block; margin:1em auto; border:1px solid black; }
+
+		    canvas { background:url(tempExBG-01.png) }
+
+		</style>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+
+			// ============================================================
+			// =================== GLOBAL VARIABLES =======================
+			// ============================================================
+
+			var socket;
+
+			var graphCanvas;
+
+			var graphCtx;
+
+			var cont1x = 0;
+			var cont1y = 0;
+
+			var cont2x = 0;
+			var cont2y = 0;
+
+			var cont3x = 0;
+			var cont3y = 0;
+
+			var cont4x = 0;
+			var cont4y = 0;
+
+			// ============================================================
+			// ===================== LOAD + EVENTS ========================
+			// ============================================================
+
+			window.addEventListener('load', function(){
+
+				graphCanvas = document.getElementById('graphCanvas');
+				graphCtx = graphCanvas.getContext('2d');
+	            var img = document.getElementsByTagName('img')[0];
+				img.src = graphCanvas.toDataURL();
+
+				//connect to remote server
+				socket = io.connect('/');
+
+				//on connect, log a message
+				socket.on('connect', function(){
+					console.log("Connected to Socket Server");
+				});	
+
+				socket.on('ceoScore', function(data){
+					console.log('got ceo event from server');
+					cont1y = data[0]*100;
+					cont2y = data[1]*100;
+					cont3y = data[2]*100;
+					cont4y = data[3]*100;
+
+					update();
+				})
+
+				socket.on('audScore', function(data){
+					console.log('got aud event from server');
+					cont1x = data[0]*100;
+					cont2x = data[1]*100;
+					cont3x = data[2]*100;
+					cont4x = data[3]*100;
+
+					update();
+				})
+
+			});
+
+			var update = function(){
+
+				graphCanvas.width = graphCanvas.width;
+
+				var h = document.getElementById("graphCanvas").getAttribute("height");
+
+	            
+				var radius = 15;
+
+				graphCtx.fillStyle = 'green';
+		      	graphCtx.beginPath();
+		      	graphCtx.arc(cont1x, h-cont1y, radius, 0, 2 * Math.PI, false);
+		      	graphCtx.closePath();
+		      	graphCtx.fill();
+
+		      	graphCtx.fillStyle = 'blue';
+		      	graphCtx.beginPath();
+		      	graphCtx.arc(cont2x, h-cont2y, radius, 0, 2 * Math.PI, false);
+		      	graphCtx.closePath();
+		      	graphCtx.fill();
+		      	
+				graphCtx.fillStyle = 'red';
+				graphCtx.beginPath();
+		      	graphCtx.arc(cont3x, h-cont3y, radius, 0, 2 * Math.PI, false);
+		      	graphCtx.closePath();		      	
+		      	graphCtx.fill();
+
+				graphCtx.fillStyle = 'black';
+				graphCtx.beginPath();
+		      	graphCtx.arc(cont4x, h-cont4y, radius, 0, 2 * Math.PI, false);
+		      	graphCtx.closePath();
+		      	graphCtx.fill();
+
+		      	var img = document.getElementsByTagName('img')[0];
+				img.src = graphCanvas.toDataURL();
+
+			}	
+
+		</script>
+
+	</head>
+
+	<body>
+
+		<div id="sensorValues" align='center'>
+			American Game Changers Results
+		</div>
+
+		<div class="graph" align='center'>
+			<canvas id="graphCanvas" width="600" height="600">
+			</canvas>
+			<img id="imagefile" style="display:none;">
+		</div>
+
+
+
+	</body>
+
+</html>
